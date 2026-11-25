@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pocket Brief — notes to decisions, on-device first</title>
+<meta name="description" content="Turn raw meeting notes into a one-page decision brief. Runs on Gemini Nano in your browser; falls back to the cloud only when you allow it." />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="mark" aria-hidden="true">¶</span>
+    <div>
+      <h1>Pocket Brief</h1>
+      <p class="tag">Notes in. Decisions out. Stays on your device by default.</p>
+    </div>
+  </div>
+  <div class="chips">
+    <span id="deviceChip" class="chip" title="Chrome built-in Gemini Nano availability">checking device…</span>
+    <span id="netChip" class="chip" title="Network status">online</span>
+  </div>
+</header>
+
+<main class="grid">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Raw notes</h2>
+      <button id="sampleBtn" class="ghost" type="button">Load sample</button>
+    </div>
+    <textarea id="notes" spellcheck="false" aria-label="Raw notes"></textarea>
+    <div class="row">
+      <span id="charCount" class="muted">0 chars</span>
+      <span class="muted">Everything below runs from this box.</span>
+    </div>
+
+    <fieldset class="modes">
+      <legend>Where should it think?</legend>
+      <label><input type="radio" name="mode" value="auto" checked /> <b>Auto</b> — on-device first, cloud if needed</label>
+      <label><input type="radio" name="mode" value="device" /> <b>Private</b> — on-device only, never leaves the browser</label>
+      <label><input type="radio" name="mode" value="cloud" /> <b>Quality</b> — cloud only</label>
+      <label><input type="radio" name="mode" value="cloudfirst" /> <b>Cloud first</b> — cloud, device as backup</label>
+    </fieldset>
+
+    <div class="actions">
+      <button id="runBtn" class="primary" type="button">Write the brief</button>
+      <button id="prepBtn" class="ghost" type="button" title="Download the Gemini Nano model (a few GB, one time)">Prepare on-device model</button>
+    </div>
+    <div id="downloadWrap" class="download hidden">
+      <div class="bar"><div id="downloadBar"></div></div>
+      <span id="downloadText" class="muted">downloading model…</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Brief</h2>
+      <button id="copyBtn" class="ghost" type="button">Copy</button>
+    </div>
+    <div id="status" class="status" role="status" aria-live="polite">Waiting for notes.</div>
+    <pre id="output" class="output" aria-label="Generated brief">—</pre>
+    <p class="fine">This page has no backend of its own. Prompts go to Gemini Nano locally, or to Firebase AI Logic in the cloud when you pick a cloud mode. Nothing is stored on a server.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Firebase AI Logic · hybrid inference · App Check</span>
+  <span id="timing"></span>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

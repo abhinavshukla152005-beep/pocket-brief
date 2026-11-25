@@ -124,6 +124,27 @@ function modelFor(opts) {
   return getGenerativeModel(ai, opts);
 }
 
+async function ensureDeviceModel(model) {
+  if (typeof LanguageModel === "undefined") return false;
+  try {
+    const a = await LanguageModel.availability();
+    if (a === "readily" || a === "available") return true;
+    if (a === "unavailable") return false;
+    el.downloadWrap.classList.remove("hidden");
+    el.downloadText.textContent = "preparing on-device model…";
+    await model.initializeDeviceModel((p) => {
+      const pct = Math.round(p * 100);
+      el.downloadBar.style.width = pct + "%";
+      el.downloadText.textContent = `preparing on-device model… ${pct}%`;
+    });
+    el.downloadWrap.classList.add("hidden");
+    return true;
+  } catch {
+    el.downloadWrap.classList.add("hidden");
+    return false;
+  }
+}
+
 async function prepareDevice() {
   el.prep.classList.add("hidden");
   el.downloadWrap.classList.remove("hidden");
@@ -163,10 +184,30 @@ async function run() {
   const t0 = performance.now();
   try {
     const model = modelFor(opts);
+
+    // The SDK may fall back to the cloud even in ONLY_ON_DEVICE, so Private
+    // mode verifies the device model itself and never lets a cloud answer through.
+    if (key === "device") {
+      const ready = await ensureDeviceModel(model);
+      if (!ready) {
+        el.output.textContent = "—";
+        setStatus("Gemini Nano is not available in this browser, so nothing was generated and nothing was sent anywhere. Install the model in Chrome 139+ and retry.", "error");
+        el.run.disabled = false;
+        return;
+      }
+    }
+
     const res = await model.generateContent(PROMPT_HEAD + notes);
     const text = res.response.text().trim();
     const src = String(res.response.inferenceSource || "").toUpperCase();
     const ms = Math.round(performance.now() - t0);
+
+    if (key === "device" && src !== "ON_DEVICE") {
+      el.output.textContent = "—";
+      setStatus("Private mode was violated: the request was answered in the cloud, so the result is discarded. Use Auto if you accept cloud fallback.", "error");
+      el.run.disabled = false;
+      return;
+    }
 
     el.output.textContent = text || "(empty response)";
     el.timing.textContent = `${key} · ${ms} ms`;

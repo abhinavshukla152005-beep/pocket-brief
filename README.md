@@ -26,6 +26,11 @@ Four modes, mapped one-to-one onto `InferenceMode`:
 Every result is labelled with `response.inferenceSource` (`ON_DEVICE` /
 `IN_CLOUD`), so the page can say where the answer actually came from.
 
+**Why Private mode re-checks the device:** while testing, the SDK answered from
+the cloud even with `ONLY_ON_DEVICE` when no device model was installed. Private
+mode therefore verifies `LanguageModel.availability()`, prepares the model
+itself, and discards any response whose `inferenceSource` is not `ON_DEVICE`.
+
 ## Requirements
 
 - Chrome on desktop, version 139+ (for the built-in Gemini Nano API).
